@@ -8,8 +8,8 @@ import android.view.accessibility.AccessibilityEvent
 
 class GamepadService : AccessibilityService() {
 
-    // 기본 매핑 (zero2-mapper.json으로 덮어쓰기 가능)
     private var keyMap = mapOf(
+        // Android 모드 KeyCode
         KeyEvent.KEYCODE_BUTTON_A     to "next_page",
         KeyEvent.KEYCODE_BUTTON_B     to "prev_page",
         KeyEvent.KEYCODE_BUTTON_X     to "confirm",
@@ -20,6 +20,11 @@ class GamepadService : AccessibilityService() {
         KeyEvent.KEYCODE_DPAD_DOWN    to "nav_down",
         KeyEvent.KEYCODE_DPAD_LEFT    to "nav_left",
         KeyEvent.KEYCODE_DPAD_RIGHT   to "nav_right",
+        // 혹시 다른 KeyCode로 잡힐 경우 대비
+        KeyEvent.KEYCODE_BUTTON_1     to "next_page",
+        KeyEvent.KEYCODE_BUTTON_2     to "prev_page",
+        KeyEvent.KEYCODE_BUTTON_3     to "confirm",
+        KeyEvent.KEYCODE_BUTTON_4     to "back",
     )
 
     private var lastAction = 0L
@@ -63,13 +68,11 @@ class GamepadService : AccessibilityService() {
 
     private fun dispatchKey(keyCode: Int) {
         val down = KeyEvent(KeyEvent.ACTION_DOWN, keyCode)
-        val up   = KeyEvent(KeyEvent.ACTION_UP,   keyCode)
-        performGlobalAction(GLOBAL_ACTION_ACCESSIBILITY_SHORTCUT)
-        // 포커스된 뷰에 키 이벤트 전달
-        rootInActiveWindow?.apply {
-            findFocus(android.view.accessibility.AccessibilityNodeInfo.FOCUS_INPUT)?.let {
-                it.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
-            }
-        }
+        val up = KeyEvent(KeyEvent.ACTION_UP, keyCode)
+        rootInActiveWindow?.findFocus(
+            android.view.accessibility.AccessibilityNodeInfo.FOCUS_INPUT
+        )?.performAction(
+            android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS
+        )
     }
 }
