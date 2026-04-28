@@ -432,8 +432,23 @@ function closeModal(e){
 function resetAll(){
   if(!confirm('매핑을 초기화하시겠어요?'))return;
   mapping={...DEFAULT_MAP};
+  localStorage.removeItem('z2map');
   localStorage.setItem('z2map',JSON.stringify(mapping));
+  if(window.Android) window.Android.saveMapping(JSON.stringify(mapping));
   syncSvg();buildRows();
+  const toast = document.createElement('div');
+  toast.textContent = '🔄 초기화되었습니다!';
+  toast.style.cssText = `
+    position: fixed; bottom: 2rem; left: 50%;
+    transform: translateX(-50%);
+    background: #111; color: #fff;
+    padding: 0.8rem 1.5rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    z-index: 999;
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
 }
 
 function goBack(){
