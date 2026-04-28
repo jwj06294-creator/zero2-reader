@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Zero2 Reader</string>
+    <string name="accessibility_description">8BitDo Zero2 버튼을 볼륨키로 변환해서 부커스/교보도서관 앱의 페이지를 넘깁니다.</string>
+</resources>
