@@ -3,6 +3,7 @@ package com.zero2.reader
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.accessibilityservice.GestureDescription
+import android.content.Context
 import android.content.Intent
 import android.graphics.Path
 import android.view.KeyEvent
@@ -41,11 +42,24 @@ class GamepadService : AccessibilityService() {
         val info = serviceInfo
         info.flags = info.flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
         serviceInfo = info
+        // ✅ 앱 시작 시 저장된 매핑 불러오기
+        loadSavedMapping()
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
         instance = null
         return super.onUnbind(intent)
+    }
+
+    // 저장된 매핑 불러오기
+    private fun loadSavedMapping() {
+        val prefs = applicationContext.getSharedPreferences("z2map", Context.MODE_PRIVATE)
+        val json = prefs.getString("mapping", null) ?: return
+        try {
+            updateMapping(json)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
@@ -74,7 +88,6 @@ class GamepadService : AccessibilityService() {
         return true
     }
 
-    // 화면 탭 (페이지 넘기기)
     private fun tapScreen(right: Boolean) {
         val display = resources.displayMetrics
         val x = if (right) display.widthPixels * 0.75f
@@ -83,30 +96,24 @@ class GamepadService : AccessibilityService() {
         gesture(x, y)
     }
 
-    // 볼륨 버튼 위치 탭 (실제 볼륨키 전송 불가 → 시스템 UI 탭으로 대체)
     private fun tapVolume(up: Boolean) {
-        val display = resources.displayMetrics
-        // 볼륨은 performGlobalAction으로 대체 불가 → 노드 탐색으로 처리
         val root = rootInActiveWindow ?: return
         val action = if (up) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
                      else    AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
         root.performAction(action)
     }
 
-    // 포커스된 노드 클릭 (confirm)
     private fun clickFocused() {
         val root = rootInActiveWindow ?: return
         val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY)
             ?: root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
         focused?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
             ?: run {
-                // 포커스 없으면 화면 중앙 탭
                 val d = resources.displayMetrics
                 gesture(d.widthPixels * 0.5f, d.heightPixels * 0.5f)
             }
     }
 
-    // 다음 포커스로 이동
     private fun focusNext() {
         val root = rootInActiveWindow ?: return
         val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY)
@@ -121,13 +128,11 @@ class GamepadService : AccessibilityService() {
         ) ?: root.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
     }
 
-    // 스크롤 탐색
     private fun navigate(action: Int) {
         val root = rootInActiveWindow ?: return
         root.performAction(action)
     }
 
-    // 제스처 탭 헬퍼
     private fun gesture(x: Float, y: Float) {
         val path = Path().apply { moveTo(x, y) }
         val gesture = GestureDescription.Builder()
@@ -136,7 +141,6 @@ class GamepadService : AccessibilityService() {
         dispatchGesture(gesture, null, null)
     }
 
-    // 매핑 업데이트 (MainActivity 브릿지에서 호출)
     fun updateMapping(json: String) {
         val obj = org.json.JSONObject(json)
         val btnToKeyCode = mapOf(
