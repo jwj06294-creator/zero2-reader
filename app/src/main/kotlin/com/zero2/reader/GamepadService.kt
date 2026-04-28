@@ -3,41 +3,49 @@ package com.zero2.reader
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.accessibilityservice.GestureDescription
+import android.content.Intent
 import android.graphics.Path
-import android.os.Handler
-import android.os.Looper
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
 
 class GamepadService : AccessibilityService() {
 
+    companion object {
+        var instance: GamepadService? = null
+    }
+
     private var keyMap = mutableMapOf(
-        KeyEvent.KEYCODE_BUTTON_A  to "next_page",
-        KeyEvent.KEYCODE_BUTTON_B  to "prev_page",
-        KeyEvent.KEYCODE_BUTTON_X  to "confirm",
-        KeyEvent.KEYCODE_BUTTON_Y  to "back",
-        KeyEvent.KEYCODE_BUTTON_L1 to "prev_page",
-        KeyEvent.KEYCODE_BUTTON_R1 to "next_page",
-        KeyEvent.KEYCODE_DPAD_UP   to "nav_up",
-        KeyEvent.KEYCODE_DPAD_DOWN to "nav_down",
-        KeyEvent.KEYCODE_DPAD_LEFT to "nav_left",
+        KeyEvent.KEYCODE_BUTTON_A   to "next_page",
+        KeyEvent.KEYCODE_BUTTON_B   to "prev_page",
+        KeyEvent.KEYCODE_BUTTON_X   to "confirm",
+        KeyEvent.KEYCODE_BUTTON_Y   to "back",
+        KeyEvent.KEYCODE_BUTTON_L1  to "prev_page",
+        KeyEvent.KEYCODE_BUTTON_R1  to "next_page",
+        KeyEvent.KEYCODE_DPAD_UP    to "nav_up",
+        KeyEvent.KEYCODE_DPAD_DOWN  to "nav_down",
+        KeyEvent.KEYCODE_DPAD_LEFT  to "nav_left",
         KeyEvent.KEYCODE_DPAD_RIGHT to "nav_right",
-        KeyEvent.KEYCODE_BUTTON_1  to "next_page",
-        KeyEvent.KEYCODE_BUTTON_2  to "prev_page",
-        KeyEvent.KEYCODE_BUTTON_3  to "confirm",
-        KeyEvent.KEYCODE_BUTTON_4  to "back",
+        KeyEvent.KEYCODE_BUTTON_1   to "next_page",
+        KeyEvent.KEYCODE_BUTTON_2   to "prev_page",
+        KeyEvent.KEYCODE_BUTTON_3   to "confirm",
+        KeyEvent.KEYCODE_BUTTON_4   to "back",
     )
 
     private var lastAction = 0L
     private val DEBOUNCE = 250L
 
-    // 서비스 연결 시 플래그 강제 설정 → 부커스에서도 유지
     override fun onServiceConnected() {
         super.onServiceConnected()
+        instance = this
         val info = serviceInfo
-        info.flags = info.flags or
-            AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+        info.flags = info.flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
         serviceInfo = info
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        instance = null
+        return super.onUnbind(intent)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
@@ -53,50 +61,74 @@ class GamepadService : AccessibilityService() {
         when (action) {
             "next_page" -> tapScreen(right = true)
             "prev_page" -> tapScreen(right = false)
-            "nav_up"    -> sendKey(KeyEvent.KEYCODE_DPAD_UP)
-            "nav_down"  -> sendKey(KeyEvent.KEYCODE_DPAD_DOWN)
-            "nav_left"  -> sendKey(KeyEvent.KEYCODE_DPAD_LEFT)
-            "nav_right" -> sendKey(KeyEvent.KEYCODE_DPAD_RIGHT)
-            "confirm"   -> sendKey(KeyEvent.KEYCODE_ENTER)
+            "nav_up"    -> navigate(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD)
+            "nav_down"  -> navigate(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+            "nav_left"  -> performGlobalAction(GLOBAL_ACTION_BACK)
+            "nav_right" -> focusNext()
+            "confirm"   -> clickFocused()
             "back"      -> performGlobalAction(GLOBAL_ACTION_BACK)
             "home"      -> performGlobalAction(GLOBAL_ACTION_HOME)
-            "vol_up"    -> sendKey(KeyEvent.KEYCODE_VOLUME_UP)
-            "vol_down"  -> sendKey(KeyEvent.KEYCODE_VOLUME_DOWN)
+            "vol_up"    -> tapVolume(up = true)
+            "vol_down"  -> tapVolume(up = false)
         }
         return true
     }
 
-    // 실제로 키 이벤트를 전송
-    private fun sendKey(keyCode: Int) {
-        val path = Path().apply {
-            moveTo(0f, 0f)  // 더미 경로 (키 전송용 아님)
-        }
-        // GestureDescription 대신 performGlobalAction 계열 사용
-        val down = KeyEvent(KeyEvent.ACTION_DOWN, keyCode)
-        val up   = KeyEvent(KeyEvent.ACTION_UP,   keyCode)
-        rootInActiveWindow?.performAction(0) // 포커스 유지
-        Handler(Looper.getMainLooper()).post {
-            dispatchGesture(
-                GestureDescription.Builder()
-                    .addStroke(GestureDescription.StrokeDescription(
-                        Path().apply { moveTo(1f, 1f) }, 0, 1
-                    ))
-                    .build(),
-                null, null
-            )
-        }
-        // 실제 키 전송
-        performGlobalAction(when(keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP    -> GLOBAL_ACTION_ACCESSIBILITY_BUTTON
-            else -> GLOBAL_ACTION_ACCESSIBILITY_BUTTON
-        })
-    }
-
+    // 화면 탭 (페이지 넘기기)
     private fun tapScreen(right: Boolean) {
         val display = resources.displayMetrics
         val x = if (right) display.widthPixels * 0.75f
-                 else       display.widthPixels * 0.25f
+                 else      display.widthPixels * 0.25f
         val y = display.heightPixels * 0.5f
+        gesture(x, y)
+    }
+
+    // 볼륨 버튼 위치 탭 (실제 볼륨키 전송 불가 → 시스템 UI 탭으로 대체)
+    private fun tapVolume(up: Boolean) {
+        val display = resources.displayMetrics
+        // 볼륨은 performGlobalAction으로 대체 불가 → 노드 탐색으로 처리
+        val root = rootInActiveWindow ?: return
+        val action = if (up) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
+                     else    AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+        root.performAction(action)
+    }
+
+    // 포커스된 노드 클릭 (confirm)
+    private fun clickFocused() {
+        val root = rootInActiveWindow ?: return
+        val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY)
+            ?: root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+        focused?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            ?: run {
+                // 포커스 없으면 화면 중앙 탭
+                val d = resources.displayMetrics
+                gesture(d.widthPixels * 0.5f, d.heightPixels * 0.5f)
+            }
+    }
+
+    // 다음 포커스로 이동
+    private fun focusNext() {
+        val root = rootInActiveWindow ?: return
+        val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY)
+        focused?.performAction(
+            AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
+            android.os.Bundle().apply {
+                putInt(
+                    AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT,
+                    AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE
+                )
+            }
+        ) ?: root.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
+    }
+
+    // 스크롤 탐색
+    private fun navigate(action: Int) {
+        val root = rootInActiveWindow ?: return
+        root.performAction(action)
+    }
+
+    // 제스처 탭 헬퍼
+    private fun gesture(x: Float, y: Float) {
         val path = Path().apply { moveTo(x, y) }
         val gesture = GestureDescription.Builder()
             .addStroke(GestureDescription.StrokeDescription(path, 0, 100))
@@ -104,7 +136,7 @@ class GamepadService : AccessibilityService() {
         dispatchGesture(gesture, null, null)
     }
 
-    // HTML mapper에서 window.Android.saveMapping() 호출 시 반영
+    // 매핑 업데이트 (MainActivity 브릿지에서 호출)
     fun updateMapping(json: String) {
         val obj = org.json.JSONObject(json)
         val btnToKeyCode = mapOf(
