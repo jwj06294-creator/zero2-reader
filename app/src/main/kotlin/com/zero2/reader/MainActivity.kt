@@ -13,29 +13,37 @@ import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
-    // WebView에서 window.Android로 호출되는 브릿지
+    private var statusIcon: TextView? = null
+    private var statusDesc: TextView? = null
+    private var accessibilityBtn: Button? = null
+
     inner class AndroidBridge {
         @JavascriptInterface
         fun saveMapping(json: String) {
-            // SharedPreferences에 저장
             getSharedPreferences("z2map", MODE_PRIVATE)
                 .edit()
                 .putString("mapping", json)
                 .apply()
-
-            // 실행 중인 GamepadService에 반영
             GamepadService.instance?.updateMapping(json)
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        showMainScreen()
+        showMainScreen() // 최초 1회만
     }
 
     override fun onResume() {
         super.onResume()
-        showMainScreen()
+        // setContentView 재호출 없이 상태 텍스트만 갱신
+        val isEnabled = isAccessibilityEnabled()
+        statusIcon?.text = if (isEnabled) "✅ 접근성 서비스 활성화됨" else "⚠️ 접근성 서비스 비활성화"
+        statusIcon?.setTextColor(if (isEnabled) 0xFF111111.toInt() else 0xFF888888.toInt())
+        statusDesc?.text = if (isEnabled)
+            "Zero2 버튼이 E북 앱에서 작동합니다.\n부커스/교보도서관을 열고 버튼을 눌러보세요!"
+        else
+            "아래 버튼을 눌러 접근성 설정에서\nZero2 Reader를 활성화해주세요."
+        accessibilityBtn?.text = if (isEnabled) "접근성 설정 확인" else "접근성 설정 열기"
     }
 
     private fun showMainScreen() {
@@ -57,13 +65,13 @@ class MainActivity : AppCompatActivity() {
             setTextColor(0xFF888888.toInt())
             setPadding(0, 0, 0, 48)
         }
-        val statusIcon = TextView(this).apply {
+        statusIcon = TextView(this).apply {
             text = if (isEnabled) "✅ 접근성 서비스 활성화됨" else "⚠️ 접근성 서비스 비활성화"
             textSize = 16f
             setTextColor(if (isEnabled) 0xFF111111.toInt() else 0xFF888888.toInt())
             setPadding(0, 0, 0, 12)
         }
-        val statusDesc = TextView(this).apply {
+        statusDesc = TextView(this).apply {
             text = if (isEnabled)
                 "Zero2 버튼이 E북 앱에서 작동합니다.\n부커스/교보도서관을 열고 버튼을 눌러보세요!"
             else
@@ -72,7 +80,7 @@ class MainActivity : AppCompatActivity() {
             setTextColor(0xFF555555.toInt())
             setPadding(0, 0, 0, 48)
         }
-        val accessibilityBtn = Button(this).apply {
+        accessibilityBtn = Button(this).apply {
             text = if (isEnabled) "접근성 설정 확인" else "접근성 설정 열기"
             textSize = 15f
             setPadding(0, 24, 0, 24)
@@ -108,7 +116,6 @@ class MainActivity : AppCompatActivity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             webViewClient = WebViewClient()
-            // ✅ 브릿지 연결
             addJavascriptInterface(AndroidBridge(), "Android")
             loadUrl("file:///android_asset/mapper.html")
         }
