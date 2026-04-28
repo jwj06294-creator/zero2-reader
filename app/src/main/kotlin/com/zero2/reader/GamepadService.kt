@@ -106,8 +106,8 @@ class GamepadService : AccessibilityService() {
             when (action) {
                 "next_page"  -> tapScreen(right = true)
                 "prev_page"  -> tapScreen(right = false)
-                "nav_up"     -> navigate(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD)
-                "nav_down"   -> navigate(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                "nav_up"     -> tapScreen(top = true)
+                "nav_down"   -> tapScreen(top = false)
                 "nav_left"   -> performGlobalAction(GLOBAL_ACTION_BACK)
                 "nav_right"  -> focusNext()
                 "confirm"    -> clickFocused()
@@ -185,11 +185,19 @@ class GamepadService : AccessibilityService() {
         } catch (e: Exception) { e.printStackTrace() }
     }
 
-    private fun tapScreen(right: Boolean) {
+    private fun tapScreen(right: Boolean = true, top: Boolean? = null) {
         try {
             val display = resources.displayMetrics
-            val x = if (right) display.widthPixels * 0.75f else display.widthPixels * 0.25f
-            val y = display.heightPixels * 0.5f
+            val x = when {
+                top != null -> display.widthPixels * 0.5f
+                right -> display.widthPixels * 0.75f
+                else -> display.widthPixels * 0.25f
+            }
+            val y = when {
+                top == true -> display.heightPixels * 0.25f
+                top == false -> display.heightPixels * 0.75f
+                else -> display.heightPixels * 0.5f
+            }
             gesture(x, y)
         } catch (e: Exception) { e.printStackTrace() }
     }
@@ -230,13 +238,6 @@ class GamepadService : AccessibilityService() {
                     )
                 }
             ) ?: root.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
-        } catch (e: Exception) { e.printStackTrace() }
-    }
-
-    private fun navigate(action: Int) {
-        try {
-            val root = rootInActiveWindow ?: return
-            root.performAction(action)
         } catch (e: Exception) { e.printStackTrace() }
     }
 
