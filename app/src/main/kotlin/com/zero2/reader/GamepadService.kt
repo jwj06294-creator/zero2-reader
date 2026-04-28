@@ -6,6 +6,7 @@ import android.accessibilityservice.GestureDescription
 import android.content.Context
 import android.content.Intent
 import android.graphics.Path
+import android.media.AudioManager
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -35,14 +36,15 @@ class GamepadService : AccessibilityService() {
 
     private var lastAction = 0L
     private val DEBOUNCE = 250L
+    private lateinit var audioManager: AudioManager
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val info = serviceInfo
         info.flags = info.flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
         serviceInfo = info
-        // ✅ 앱 시작 시 저장된 매핑 불러오기
         loadSavedMapping()
     }
 
@@ -51,7 +53,6 @@ class GamepadService : AccessibilityService() {
         return super.onUnbind(intent)
     }
 
-    // 저장된 매핑 불러오기
     private fun loadSavedMapping() {
         val prefs = applicationContext.getSharedPreferences("z2map", Context.MODE_PRIVATE)
         val json = prefs.getString("mapping", null) ?: return
@@ -66,6 +67,14 @@ class GamepadService : AccessibilityService() {
     override fun onInterrupt() {}
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
+        // ✅ 키 로그 기록 (어떤 keyCode가 들어오는지 확인용)
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            val prefs = applicationContext.getSharedPreferences("z2map", Context.MODE_PRIVATE)
+            val prev = prefs.getString("keylog", "") ?: ""
+            val line = "${event.keyCode}=${KeyEvent.keyCodeToString(event.keyCode)}"
+            prefs.edit().putString("keylog", "$line\n$prev").apply()
+        }
+
         if (event.action != KeyEvent.ACTION_DOWN) return false
         val now = System.currentTimeMillis()
         if (now - lastAction < DEBOUNCE) return false
@@ -96,11 +105,13 @@ class GamepadService : AccessibilityService() {
         gesture(x, y)
     }
 
+    // ✅ AudioManager로 실제 볼륨 제어
     private fun tapVolume(up: Boolean) {
-        val root = rootInActiveWindow ?: return
-        val action = if (up) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
-                     else    AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
-        root.performAction(action)
+        audioManager.adjustStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            if (up) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER,
+            AudioManager.FLAG_SHOW_UI
+        )
     }
 
     private fun clickFocused() {
