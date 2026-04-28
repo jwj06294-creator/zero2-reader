@@ -203,17 +203,17 @@ header { text-align: center; }
     <text x="242" y="147" font-family="monospace" font-size="6.5" fill="#aaa" text-anchor="middle" dominant-baseline="central">STA</text>
   </g>
 
-  <g class="spot" data-btn="y" onclick="selectBtn('y')">
+ <g class="spot" data-btn="x" onclick="selectBtn('x')">
     <circle class="body" cx="310" cy="86" r="15"/>
-    <text class="lbl" x="310" y="86">Y</text>
+    <text class="lbl" x="310" y="86">X</text>
   </g>
-  <g class="spot" data-btn="x" onclick="selectBtn('x')">
-    <circle class="body" cx="338" cy="112" r="15"/>
-    <text class="lbl" x="338" y="112">X</text>
+  <g class="spot" data-btn="y" onclick="selectBtn('y')">
+    <circle class="body" cx="282" cy="112" r="15"/>
+    <text class="lbl" x="282" y="112">Y</text>
   </g>
   <g class="spot" data-btn="a" onclick="selectBtn('a')">
-    <circle class="body" cx="282" cy="112" r="15"/>
-    <text class="lbl" x="282" y="112">A</text>
+    <circle class="body" cx="338" cy="112" r="15"/>
+    <text class="lbl" x="338" y="112">A</text>
   </g>
   <g class="spot" data-btn="b" onclick="selectBtn('b')">
     <circle class="body" cx="310" cy="138" r="15"/>
@@ -377,7 +377,21 @@ function assign(actionId){
 function saveMap(){
   localStorage.setItem('z2map',JSON.stringify(mapping));
   if(window.Android) window.Android.saveMapping(JSON.stringify(mapping));
-  alert('저장되었습니다!');
+  
+  const toast = document.createElement('div');
+  toast.textContent = '✅ 저장되었습니다!';
+  toast.style.cssText = `
+    position: fixed; bottom: 2rem; left: 50%;
+    transform: translateX(-50%);
+    background: #111; color: #fff;
+    padding: 0.8rem 1.5rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    z-index: 999;
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
 }
 
 function syncSvg(){
