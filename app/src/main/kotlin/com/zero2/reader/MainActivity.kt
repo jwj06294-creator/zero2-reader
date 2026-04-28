@@ -9,6 +9,7 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
@@ -30,12 +31,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        showMainScreen() // 최초 1회만
+        showMainScreen()
     }
 
     override fun onResume() {
         super.onResume()
-        // setContentView 재호출 없이 상태 텍스트만 갱신
         val isEnabled = isAccessibilityEnabled()
         statusIcon?.text = if (isEnabled) "✅ 접근성 서비스 활성화됨" else "⚠️ 접근성 서비스 비활성화"
         statusIcon?.setTextColor(if (isEnabled) 0xFF111111.toInt() else 0xFF888888.toInt())
@@ -101,6 +101,30 @@ class MainActivity : AppCompatActivity() {
             setTextColor(0xFF111111.toInt())
             setOnClickListener { showMappingScreen() }
         }
+        // ✅ 키 로그 확인 버튼
+        val logBtn = Button(this).apply {
+            text = "키 로그 보기"
+            textSize = 13f
+            setPadding(0, 16, 0, 16)
+            setBackgroundColor(0xFFdddddd.toInt())
+            setTextColor(0xFF111111.toInt())
+            setOnClickListener {
+                val log = getSharedPreferences("z2map", MODE_PRIVATE)
+                    .getString("keylog", "아직 키 입력 없음")
+                Toast.makeText(this@MainActivity, log, Toast.LENGTH_LONG).show()
+            }
+        }
+        val clearLogBtn = Button(this).apply {
+            text = "로그 초기화"
+            textSize = 13f
+            setPadding(0, 16, 0, 16)
+            setBackgroundColor(0xFFeeeeee.toInt())
+            setTextColor(0xFF888888.toInt())
+            setOnClickListener {
+                getSharedPreferences("z2map", MODE_PRIVATE).edit().remove("keylog").apply()
+                Toast.makeText(this@MainActivity, "로그 초기화됨", Toast.LENGTH_SHORT).show()
+            }
+        }
         layout.addView(appTitle)
         layout.addView(appSub)
         layout.addView(statusIcon)
@@ -108,6 +132,8 @@ class MainActivity : AppCompatActivity() {
         layout.addView(accessibilityBtn)
         layout.addView(divider)
         layout.addView(mappingBtn)
+        layout.addView(logBtn)
+        layout.addView(clearLogBtn)
         setContentView(layout)
     }
 
