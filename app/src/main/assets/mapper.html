@@ -110,4 +110,300 @@ header { text-align: center; }
   text-transform: uppercase;
   cursor: pointer;
 }
-.ui-btn:hover { border-color: #000
+.ui-btn:hover { border-color: #000; background: #e0e0e0; }
+.ui-btn.primary { background: #111; color: #fff; border-color: #111; font-weight: 700; }
+.ui-btn.primary:hover { background: #333; }
+
+#overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 100;
+  align-items: flex-end; justify-content: center;
+}
+#overlay.open { display: flex; }
+.sheet {
+  background: #fff;
+  border: 2px solid #111;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  width: 100%; max-width: 500px;
+  padding: 1rem 1.2rem 2.5rem;
+  max-height: 85vh; overflow-y: auto;
+}
+.sheet-handle { width: 32px; height: 3px; background: #ccc; border-radius: 2px; margin: 0 auto 1rem; }
+.sheet-eyebrow { font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.2rem; }
+.sheet-name { font-size: 1.05rem; font-weight: 700; margin-bottom: 1.2rem; }
+
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
+.opt-group-label {
+  grid-column: 1/-1;
+  font-family: monospace; font-size: 0.6rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--muted); padding: 0.8rem 0 0.3rem;
+  border-top: 1px solid var(--border);
+}
+.opt {
+  display: flex; flex-direction: column; gap: 0.15rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 6px; cursor: pointer;
+}
+.opt:hover { border-color: #000; background: #e8e8e8; }
+.opt.sel { border-color: #000; background: #e0e0e0; font-weight: 700; }
+.opt.full { grid-column: 1/-1; flex-direction: row; align-items: center; gap: 0.7rem; }
+.opt-icon { font-size: 1.1rem; }
+.opt-label { font-size: 0.84rem; font-weight: 500; }
+.opt-desc { font-family: monospace; font-size: 0.65rem; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title">8BitDo Zero2 · BOOX Palma</div>
+  <div class="subtitle">버튼을 탭해서 동작을 설정하세요</div>
+</header>
+
+<div class="controller-wrap">
+<svg class="controller-svg" viewBox="0 0 480 230" xmlns="http://www.w3.org/2000/svg">
+  <rect x="70" y="52" width="300" height="138" rx="62" ry="62" fill="#f8f8f8" stroke="#888" stroke-width="1.2"/>
+  <rect x="80" y="62" width="280" height="118" rx="56" ry="56" fill="none" stroke="#ccc" stroke-width="0.8"/>
+
+  <g class="spot" data-btn="l" onclick="selectBtn('l')">
+    <rect class="body" x="84" y="44" width="72" height="19" rx="9"/>
+    <text class="lbl" x="120" y="54">L</text>
+  </g>
+  <g class="spot" data-btn="r" onclick="selectBtn('r')">
+    <rect class="body" x="284" y="44" width="72" height="19" rx="9"/>
+    <text class="lbl" x="320" y="54">R</text>
+  </g>
+
+  <g class="spot" data-btn="dpad_up" onclick="selectBtn('dpad_up')">
+    <rect class="body" x="122" y="82" width="16" height="16" rx="2"/>
+    <text class="lbl" x="130" y="90">▲</text>
+  </g>
+  <g class="spot" data-btn="dpad_down" onclick="selectBtn('dpad_down')">
+    <rect class="body" x="122" y="124" width="16" height="16" rx="2"/>
+    <text class="lbl" x="130" y="132">▼</text>
+  </g>
+  <g class="spot" data-btn="dpad_left" onclick="selectBtn('dpad_left')">
+    <rect class="body" x="100" y="103" width="16" height="16" rx="2"/>
+    <text class="lbl" x="108" y="111">◀</text>
+  </g>
+  <g class="spot" data-btn="dpad_right" onclick="selectBtn('dpad_right')">
+    <rect class="body" x="144" y="103" width="16" height="16" rx="2"/>
+    <text class="lbl" x="152" y="111">▶</text>
+  </g>
+  <rect x="122" y="103" width="16" height="16" fill="#f8f8f8"/>
+
+  <g>
+    <circle cx="198" cy="147" r="13" fill="#f8f8f8" stroke="#aaa" stroke-width="1" stroke-dasharray="3,2"/>
+    <text x="198" y="147" font-family="monospace" font-size="6.5" fill="#aaa" text-anchor="middle" dominant-baseline="central">SEL</text>
+  </g>
+  <g>
+    <circle cx="242" cy="147" r="13" fill="#f8f8f8" stroke="#aaa" stroke-width="1" stroke-dasharray="3,2"/>
+    <text x="242" y="147" font-family="monospace" font-size="6.5" fill="#aaa" text-anchor="middle" dominant-baseline="central">STA</text>
+  </g>
+
+  <g class="spot" data-btn="y" onclick="selectBtn('y')">
+    <circle class="body" cx="310" cy="86" r="15"/>
+    <text class="lbl" x="310" y="86">Y</text>
+  </g>
+  <g class="spot" data-btn="x" onclick="selectBtn('x')">
+    <circle class="body" cx="338" cy="112" r="15"/>
+    <text class="lbl" x="338" y="112">X</text>
+  </g>
+  <g class="spot" data-btn="a" onclick="selectBtn('a')">
+    <circle class="body" cx="282" cy="112" r="15"/>
+    <text class="lbl" x="282" y="112">A</text>
+  </g>
+  <g class="spot" data-btn="b" onclick="selectBtn('b')">
+    <circle class="body" cx="310" cy="138" r="15"/>
+    <text class="lbl" x="310" y="138">B</text>
+  </g>
+
+  <line x1="120" y1="44" x2="120" y2="26" stroke="#aaa" stroke-width="0.8"/>
+  <line x1="120" y1="26" x2="152" y2="26" stroke="#aaa" stroke-width="0.8"/>
+  <text x="156" y="26" font-family="monospace" font-size="11" font-weight="500" fill="#555" dominant-baseline="central">L</text>
+  <line x1="320" y1="44" x2="320" y2="26" stroke="#aaa" stroke-width="0.8"/>
+  <line x1="290" y1="26" x2="320" y2="26" stroke="#aaa" stroke-width="0.8"/>
+  <text x="286" y="26" font-family="monospace" font-size="11" font-weight="500" fill="#555" dominant-baseline="central" text-anchor="end">R</text>
+  <line x1="100" y1="111" x2="46" y2="111" stroke="#aaa" stroke-width="0.8"/>
+  <text x="42" y="111" font-family="monospace" font-size="9" fill="#888" text-anchor="end" dominant-baseline="central">d-pad</text>
+  <line x1="198" y1="160" x2="198" y2="196" stroke="#aaa" stroke-width="0.8"/>
+  <text x="198" y="206" font-family="monospace" font-size="9" fill="#888" text-anchor="middle">− select</text>
+  <line x1="242" y1="160" x2="242" y2="196" stroke="#aaa" stroke-width="0.8"/>
+  <text x="242" y="206" font-family="monospace" font-size="9" fill="#888" text-anchor="middle">+ start</text>
+  <line x1="325" y1="84" x2="426" y2="72" stroke="#aaa" stroke-width="0.8"/>
+  <text x="430" y="72" font-family="monospace" font-size="11" fill="#555" dominant-baseline="central">Y</text>
+  <line x1="353" y1="108" x2="426" y2="96" stroke="#aaa" stroke-width="0.8"/>
+  <text x="430" y="96" font-family="monospace" font-size="11" fill="#555" dominant-baseline="central">X</text>
+  <line x1="353" y1="116" x2="426" y2="124" stroke="#aaa" stroke-width="0.8"/>
+  <text x="430" y="124" font-family="monospace" font-size="11" fill="#555" dominant-baseline="central">A</text>
+  <line x1="325" y1="153" x2="426" y2="150" stroke="#aaa" stroke-width="0.8"/>
+  <text x="430" y="150" font-family="monospace" font-size="11" fill="#555" dominant-baseline="central">B</text>
+</svg>
+</div>
+
+<div class="map-wrap">
+  <div class="map-section-title">현재 매핑</div>
+  <div id="map-rows"></div>
+</div>
+
+<div class="btn-row">
+  <button class="ui-btn" onclick="resetAll()">초기화</button>
+  <button class="ui-btn primary" onclick="saveMap()">저장</button>
+</div>
+
+<div id="overlay" onclick="closeModal(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-eyebrow">동작 설정</div>
+    <div class="sheet-name" id="sheet-name">—</div>
+    <div class="opts" id="opts"></div>
+  </div>
+</div>
+
+<script>
+const BUTTONS = [
+  {id:'a',label:'A 버튼'},{id:'b',label:'B 버튼'},
+  {id:'x',label:'X 버튼'},{id:'y',label:'Y 버튼'},
+  {id:'l',label:'L 버튼'},{id:'r',label:'R 버튼'},
+  {id:'dpad_up',label:'D-패드 ↑'},{id:'dpad_down',label:'D-패드 ↓'},
+  {id:'dpad_left',label:'D-패드 ←'},{id:'dpad_right',label:'D-패드 →'},
+];
+
+const FIXED = [
+  {id:'select', label:'SELECT', desc:'기기 기본 기능'},
+  {id:'start',  label:'START',  desc:'기기 기본 기능'},
+];
+
+const ACTIONS = [
+  {id:'next_page', label:'다음 페이지',icon:'▶',desc:'오른쪽 탭',   group:'📖 페이지'},
+  {id:'prev_page', label:'이전 페이지',icon:'◀',desc:'왼쪽 탭',    group:'📖 페이지'},
+  {id:'nav_up',    label:'위로',       icon:'↑',desc:'UI 위로',     group:'🧭 탐색'},
+  {id:'nav_down',  label:'아래로',     icon:'↓',desc:'UI 아래로',   group:'🧭 탐색'},
+  {id:'nav_left',  label:'왼쪽',       icon:'←',desc:'UI 이전',     group:'🧭 탐색'},
+  {id:'nav_right', label:'오른쪽',     icon:'→',desc:'UI 다음',     group:'🧭 탐색'},
+  {id:'confirm',   label:'선택/확인',  icon:'✓',desc:'탭',          group:'🧭 탐색'},
+  {id:'back',      label:'뒤로가기',   icon:'↩',desc:'Back key',    group:'🧭 탐색'},
+  {id:'home',      label:'홈',         icon:'⌂',desc:'Home key',    group:'⚙ 시스템'},
+  {id:'vol_up',    label:'볼륨 올리기',icon:'🔊',desc:'Volume Up',  group:'⚙ 시스템'},
+  {id:'vol_down',  label:'볼륨 내리기',icon:'🔉',desc:'Volume Down',group:'⚙ 시스템'},
+  {id:'none',      label:'없음',       icon:'✕',desc:'동작 없음',   group:null},
+];
+
+const DEFAULT_MAP = {
+  a:'next_page',b:'prev_page',x:'confirm',y:'back',
+  l:'prev_page',r:'next_page',
+  dpad_up:'nav_up',dpad_down:'nav_down',dpad_left:'nav_left',dpad_right:'nav_right',
+};
+
+let mapping = JSON.parse(localStorage.getItem('z2map')||'null') || {...DEFAULT_MAP};
+let activeBtn = null;
+
+function buildRows() {
+  const wrap = document.getElementById('map-rows');
+  wrap.innerHTML = '';
+  BUTTONS.forEach(b => {
+    const act = ACTIONS.find(a => a.id === (mapping[b.id]||'none'));
+    const has = mapping[b.id] && mapping[b.id] !== 'none';
+    const row = document.createElement('div');
+    row.className = 'map-row'+(has?' assigned':'');
+    row.id = 'row-'+b.id;
+    row.onclick = () => selectBtn(b.id);
+    row.innerHTML = `<span class="map-btn">${b.label}</span>
+      <span class="map-arrow">→</span>
+      <span class="map-action${has?'':' none'}">${act?act.icon+' '+act.label:'없음'}</span>
+      <span class="map-tap">탭</span>`;
+    wrap.appendChild(row);
+  });
+
+  const fixedTitle = document.createElement('div');
+  fixedTitle.className = 'map-section-title';
+  fixedTitle.style.marginTop = '0.8rem';
+  fixedTitle.textContent = '기본 기능 (변경 불가)';
+  wrap.appendChild(fixedTitle);
+
+  FIXED.forEach(b => {
+    const row = document.createElement('div');
+    row.className = 'map-row';
+    row.style.cssText = 'opacity:0.4;cursor:default;';
+    row.innerHTML = `<span class="map-btn">${b.label}</span>
+      <span class="map-arrow">—</span>
+      <span class="map-action">🔒 ${b.desc}</span>`;
+    wrap.appendChild(row);
+  });
+}
+
+function selectBtn(id) {
+  activeBtn = id;
+  document.querySelectorAll('.spot').forEach(el=>el.classList.remove('active'));
+  const el = document.querySelector(`[data-btn="${id}"]`);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.map-row').forEach(r=>r.classList.remove('active'));
+  const row = document.getElementById('row-'+id);
+  if(row){row.classList.add('active');row.scrollIntoView({behavior:'smooth',block:'nearest'});}
+
+  const btn = BUTTONS.find(b=>b.id===id);
+  document.getElementById('sheet-name').textContent = btn?btn.label:id;
+
+  const opts = document.getElementById('opts');
+  opts.innerHTML='';
+  const groups=[...new Set(ACTIONS.map(a=>a.group).filter(Boolean))];
+  groups.forEach(g=>{
+    const gl=document.createElement('div');
+    gl.className='opt-group-label';gl.textContent=g;opts.appendChild(gl);
+    ACTIONS.filter(a=>a.group===g).forEach(act=>{
+      const d=document.createElement('div');
+      d.className='opt'+(mapping[id]===act.id?' sel':'');
+      d.innerHTML=`<span class="opt-icon">${act.icon}</span><span class="opt-label">${act.label}</span><span class="opt-desc">${act.desc}</span>`;
+      d.onclick=()=>assign(act.id);opts.appendChild(d);
+    });
+  });
+  const na=ACTIONS.find(a=>a.id==='none');
+  const nd=document.createElement('div');
+  nd.className='opt full'+(mapping[id]==='none'?' sel':'');
+  nd.innerHTML=`<span class="opt-icon">${na.icon}</span><span class="opt-label">${na.label}</span><span class="opt-desc">${na.desc}</span>`;
+  nd.onclick=()=>assign('none');opts.appendChild(nd);
+
+  document.getElementById('overlay').classList.add('open');
+}
+
+function assign(actionId){
+  if(!activeBtn)return;
+  mapping[activeBtn]=actionId;
+  syncSvg();buildRows();closeModal();
+}
+
+function saveMap(){
+  localStorage.setItem('z2map',JSON.stringify(mapping));
+  if(window.Android) window.Android.saveMapping(JSON.stringify(mapping));
+  alert('저장되었습니다!');
+}
+
+function syncSvg(){
+  document.querySelectorAll('.spot').forEach(el=>{
+    const id=el.dataset.btn;
+    el.classList.toggle('assigned',!!(mapping[id]&&mapping[id]!=='none'));
+    el.classList.remove('active');
+  });
+}
+
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('overlay'))return;
+  document.getElementById('overlay').classList.remove('open');
+  activeBtn=null;
+  document.querySelectorAll('.spot').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.map-row').forEach(r=>r.classList.remove('active'));
+}
+
+function resetAll(){
+  if(!confirm('매핑을 초기화하시겠어요?'))return;
+  mapping={...DEFAULT_MAP};
+  localStorage.setItem('z2map',JSON.stringify(mapping));
+  syncSvg();buildRows();
+}
+
+buildRows();syncSvg();
+</script>
+</body>
+</html>
