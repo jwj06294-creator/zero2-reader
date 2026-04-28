@@ -31,6 +31,22 @@ body {
   gap: 1.5rem;
 }
 
+.top-bar {
+  width: 100%;
+  max-width: 460px;
+  padding: 0.3rem 0;
+}
+.back-btn {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--text);
+}
+.back-btn:hover { border-color: #000; background: #eee; }
+
 header { text-align: center; }
 .title {
   font-size: 0.68rem;
@@ -157,6 +173,10 @@ header { text-align: center; }
 </head>
 <body>
 
+<div class="top-bar">
+  <button class="back-btn" onclick="goBack()">← 메인</button>
+</div>
+
 <header>
   <div class="title">8BitDo Zero2 · BOOX Palma</div>
   <div class="subtitle">버튼을 탭해서 동작을 설정하세요</div>
@@ -203,7 +223,7 @@ header { text-align: center; }
     <text x="242" y="147" font-family="monospace" font-size="6.5" fill="#aaa" text-anchor="middle" dominant-baseline="central">STA</text>
   </g>
 
- <g class="spot" data-btn="x" onclick="selectBtn('x')">
+  <g class="spot" data-btn="x" onclick="selectBtn('x')">
     <circle class="body" cx="310" cy="86" r="15"/>
     <text class="lbl" x="310" y="86">X</text>
   </g>
@@ -277,19 +297,19 @@ const FIXED = [
 ];
 
 const ACTIONS = [
-  {id:'next_page', label:'다음 페이지',icon:'▶',desc:'오른쪽 탭',   group:'📖 페이지'},
-  {id:'prev_page', label:'이전 페이지',icon:'◀',desc:'왼쪽 탭',    group:'📖 페이지'},
-  {id:'nav_up',    label:'위로',       icon:'↑',desc:'UI 위로',     group:'🧭 탐색'},
-  {id:'nav_down',  label:'아래로',     icon:'↓',desc:'UI 아래로',   group:'🧭 탐색'},
-  {id:'nav_left',  label:'왼쪽',       icon:'←',desc:'UI 이전',     group:'🧭 탐색'},
-  {id:'nav_right', label:'오른쪽',     icon:'→',desc:'UI 다음',     group:'🧭 탐색'},
-  {id:'confirm',   label:'선택/확인',  icon:'✓',desc:'탭',          group:'🧭 탐색'},
-  {id:'back',      label:'뒤로가기',   icon:'↩',desc:'Back key',    group:'🧭 탐색'},
-  {id:'home',      label:'홈',         icon:'⌂',desc:'Home key',    group:'⚙ 시스템'},
-  {id:'vol_up',    label:'볼륨 올리기',icon:'🔊',desc:'Volume Up',  group:'⚙ 시스템'},
-  {id:'vol_down',  label:'볼륨 내리기',icon:'🔉',desc:'Volume Down',group:'⚙ 시스템'},
-  {{id:'screenshot',label:'스크린샷',   icon:'📷',desc:'화면 캡처',  group:'⚙ 시스템'},
-  {id:'none',      label:'없음',       icon:'✕',desc:'동작 없음',   group:null},
+  {id:'next_page',  label:'다음 페이지', icon:'▶', desc:'오른쪽 탭',    group:'📖 페이지'},
+  {id:'prev_page',  label:'이전 페이지', icon:'◀', desc:'왼쪽 탭',     group:'📖 페이지'},
+  {id:'nav_up',     label:'위로',        icon:'↑', desc:'UI 위로',      group:'🧭 탐색'},
+  {id:'nav_down',   label:'아래로',      icon:'↓', desc:'UI 아래로',    group:'🧭 탐색'},
+  {id:'nav_left',   label:'왼쪽',        icon:'←', desc:'UI 이전',      group:'🧭 탐색'},
+  {id:'nav_right',  label:'오른쪽',      icon:'→', desc:'UI 다음',      group:'🧭 탐색'},
+  {id:'confirm',    label:'선택/확인',   icon:'✓', desc:'탭',           group:'🧭 탐색'},
+  {id:'back',       label:'뒤로가기',    icon:'↩', desc:'Back key',     group:'🧭 탐색'},
+  {id:'home',       label:'홈',          icon:'⌂', desc:'Home key',     group:'⚙ 시스템'},
+  {id:'vol_up',     label:'볼륨 올리기', icon:'🔊',desc:'Volume Up',    group:'⚙ 시스템'},
+  {id:'vol_down',   label:'볼륨 내리기', icon:'🔉',desc:'Volume Down',  group:'⚙ 시스템'},
+  {id:'screenshot', label:'스크린샷',    icon:'📷',desc:'화면 캡처',    group:'⚙ 시스템'},
+  {id:'none',       label:'없음',        icon:'✕', desc:'동작 없음',    group:null},
 ];
 
 const DEFAULT_MAP = {
@@ -378,7 +398,6 @@ function assign(actionId){
 function saveMap(){
   localStorage.setItem('z2map',JSON.stringify(mapping));
   if(window.Android) window.Android.saveMapping(JSON.stringify(mapping));
-  
   const toast = document.createElement('div');
   toast.textContent = '✅ 저장되었습니다!';
   toast.style.cssText = `
@@ -415,6 +434,10 @@ function resetAll(){
   mapping={...DEFAULT_MAP};
   localStorage.setItem('z2map',JSON.stringify(mapping));
   syncSvg();buildRows();
+}
+
+function goBack(){
+  if(window.Android) window.Android.goBack();
 }
 
 buildRows();syncSvg();
