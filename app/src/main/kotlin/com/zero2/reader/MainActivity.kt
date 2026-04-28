@@ -14,7 +14,6 @@ class MainActivity : AppCompatActivity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             webViewClient = WebViewClient()
-            addJavascriptInterface(MappingBridge(this@MainActivity), "Android")
             loadUrl("file:///android_asset/mapper.html")
         }
         setContentView(webView)
