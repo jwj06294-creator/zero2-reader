@@ -5,11 +5,15 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
 
     <application
         android:label="Zero2 Reader"
         android:theme="@style/Theme.AppCompat.DayNight"
-        android:persistent="true">
+        android:persistent="true"
+        android:requestLegacyExternalStorage="true">
 
         <activity
             android:name=".MainActivity"
